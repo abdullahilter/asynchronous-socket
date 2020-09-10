@@ -21,9 +21,14 @@
         public const int PORT = 12345;
 
         /// <summary>
+        /// Content separator character.
+        /// </summary>
+        public const string SEPARATOR = "~";
+
+        /// <summary>
         /// End of text.
         /// </summary>
-        public static readonly string ETX = string.Concat("~", (char)3);
+        public static readonly string ETX = string.Concat(SEPARATOR, (char)3);
 
         /// <summary>
         /// Temp buffer.

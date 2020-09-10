@@ -15,6 +15,9 @@ namespace client
     {
         #region Declarations
 
+        // Client Id.
+        private static readonly Guid _clientId = Guid.NewGuid();
+
         // Connect and Send Reset Event instances for signal completion.
         private static AutoResetEvent _sendDone = new AutoResetEvent(false);
         private static AutoResetEvent _connectDone = new AutoResetEvent(false);
@@ -29,7 +32,7 @@ namespace client
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            Console.Title = "client";
+            Console.Title = string.Concat("client - ", _clientId);
 
             StartClientLoop();
         }
@@ -105,8 +108,10 @@ namespace client
         {
             try
             {
+                content = string.Concat(content, Constant.SEPARATOR, _clientId, Constant.ETX);
+
                 // Convert the string content to byte content using ASCII encoding.
-                byte[] buffer = Encoding.ASCII.GetBytes(string.Concat(content, Constant.ETX));
+                byte[] buffer = Encoding.ASCII.GetBytes(content);
 
                 // Begin sending the content to the remote device.
                 socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, new AsyncCallback(SendCallback), socket);

@@ -5,6 +5,8 @@ using System.Threading;
 using System.Net.Sockets;
 
 using utility;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace server
 {
@@ -17,6 +19,9 @@ namespace server
 
         // Accept Reset Event instances for signal completion.
         private static AutoResetEvent _acceptDone = new AutoResetEvent(false);
+
+        // Client list for request time check.
+        private static Dictionary<Guid, DateTime> _clientList = new Dictionary<Guid, DateTime>();
 
         #endregion
 
@@ -101,30 +106,42 @@ namespace server
             {
                 Socket socket = (Socket)asyncResult.AsyncState;
 
-                // Read content from the client socket.
-                int receivedByte = socket.EndReceive(asyncResult);
+                // Received content from the client socket.
+                int receivedBytes = socket.EndReceive(asyncResult);
 
-                if (receivedByte > 0)
+                if (receivedBytes > 0)
                 {
-                    string content = Encoding.ASCII.GetString(Constant.BUFFER, 0, receivedByte);
+                    string content = Encoding.ASCII.GetString(Constant.BUFFER, 0, receivedBytes);
 
-                    // Check for end-of-file tag. If it is not there, read more content.
-                    if (content.EndsWith(Constant.ETX, StringComparison.Ordinal))
+                    // Check for end of text/file tag.
+                    if (content.EndsWith(Constant.ETX))
                     {
-                        string timeStamp = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss.fff");
+                        DateTime receiveDateTime = DateTime.Now;
 
+                        content = content.Replace(Constant.ETX, $" - {receiveDateTime:yyyy-MM-dd hh:mm:ss.fff}");
 
-                        //get client id in content by id, find in list
-                        //find time span and check greater than 1 second or not
-                        //if return ok
-                        //else
-                        //check isWarned is true
-                        //if return shutdown
-                        //else warning
+                        Guid clientId = new Guid(content.Substring(content.LastIndexOf(Constant.SEPARATOR) + 1, 36));
 
+                        if (!_clientList.ContainsKey(clientId))
+                        {
+                            _clientList.Add(clientId, receiveDateTime);
+                        }
+                        else
+                        {
+                            KeyValuePair<Guid, DateTime> client = _clientList.FirstOrDefault(x => x.Key.Equals(clientId));
+
+                            //find time span and check greater than 1 second or not
+                            //if return ok
+                            //else
+                            //check isWarned is true
+                            //if return shutdown
+                            //else warning
+                        }
+
+                        content = content.Replace(string.Concat(Constant.SEPARATOR, clientId), string.Empty);
 
                         // All the content has been read from the client. Display it on the console.
-                        Console.WriteLine(content.Replace(Constant.ETX, $" - {timeStamp}"));
+                        Console.WriteLine(content);
                     }
                 }
 
