@@ -18,8 +18,7 @@ namespace client
         // Client Id.
         private static readonly Guid _clientId = Guid.NewGuid();
 
-        // Connect and Send Reset Event instances for signal completion.
-        private static AutoResetEvent _sendDone = new AutoResetEvent(false);
+        // Connect Reset Event instances for signal completion.
         private static AutoResetEvent _connectDone = new AutoResetEvent(false);
 
         #endregion
@@ -65,7 +64,6 @@ namespace client
 
                     // Send content to the remote device.
                     Send(socket, content);
-                    _sendDone.WaitOne();
                 }
                 catch (Exception ex)
                 {
@@ -135,9 +133,6 @@ namespace client
 
                 // Complete sending the content to the remote device.
                 socket.EndSend(asyncResult);
-
-                // Signal that all bytes have been sent.
-                _sendDone.Set();
             }
             catch (Exception ex)
             {

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Net;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Net.Sockets;
+using System.Collections.Generic;
 
 using utility;
-using System.Collections.Generic;
-using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace server
 {
@@ -21,7 +22,7 @@ namespace server
         private static AutoResetEvent _acceptDone = new AutoResetEvent(false);
 
         // Client list for request time check.
-        private static Dictionary<Guid, DateTime> _clientList = new Dictionary<Guid, DateTime>();
+        private static List<ClientDto> _clientList = new List<ClientDto>();
 
         #endregion
 
@@ -116,29 +117,40 @@ namespace server
                     // Check for end of text/file tag.
                     if (content.EndsWith(Constant.ETX))
                     {
-                        DateTime receiveDateTime = DateTime.Now;
+                        DateTime now = DateTime.Now;
 
-                        content = content.Replace(Constant.ETX, $" - {receiveDateTime:yyyy-MM-dd hh:mm:ss.fff}");
-
+                        content = content.Replace(Constant.ETX, $" - {now:yyyy-MM-dd hh:mm:ss.fff}");
                         Guid clientId = new Guid(content.Substring(content.LastIndexOf(Constant.SEPARATOR) + 1, 36));
+                        content = content.Replace(string.Concat(Constant.SEPARATOR, clientId), string.Empty);
 
-                        if (!_clientList.ContainsKey(clientId))
+                        if (!_clientList.Any(x => x.Id.Equals(clientId)))
                         {
-                            _clientList.Add(clientId, receiveDateTime);
+                            _clientList.Add(new ClientDto(clientId, now));
                         }
                         else
                         {
-                            KeyValuePair<Guid, DateTime> client = _clientList.FirstOrDefault(x => x.Key.Equals(clientId));
+                            ClientDto client = _clientList.FirstOrDefault(x => x.Id.Equals(clientId));
 
-                            //find time span and check greater than 1 second or not
-                            //if return ok
-                            //else
-                            //check isWarned is true
-                            //if return shutdown
-                            //else warning
+                            // Time diff between last 2 request.
+                            TimeSpan timeSpan = now - client.LastRequestDateTime;
+
+                            if (timeSpan.Seconds <= 1)
+                            {
+                                if (client.IsWarned)
+                                {
+                                    socket.Shutdown(SocketShutdown.Both);
+                                    return;
+                                }
+                                else
+                                {
+                                    client.IsWarned = true;
+
+                                    // Send Warning.
+                                }
+                            }
+
+                            client.LastRequestDateTime = now;
                         }
-
-                        content = content.Replace(string.Concat(Constant.SEPARATOR, clientId), string.Empty);
 
                         // All the content has been read from the client. Display it on the console.
                         Console.WriteLine(content);
