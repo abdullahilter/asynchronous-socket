@@ -42,20 +42,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Abstraction\Server\ISocketServerBeginSend.cs" />
-    <Compile Include="Abstraction\Server\ISocketServerBeginReceive.cs" />
+    <Compile Include="Interfaces\Server\ISocketServerBeginSend.cs" />
+    <Compile Include="Interfaces\Server\ISocketServerBeginReceive.cs" />
     <Compile Include="ClientDto.cs" />
-    <Compile Include="Implementation\SocketClientService.cs" />
+    <Compile Include="Services\SocketClientService.cs" />
     <Compile Include="Constant.cs" />
     <Compile Include="Helper.cs" />
-    <Compile Include="Abstraction\Client\ISocketClientService.cs" />
-    <Compile Include="Abstraction\Server\ISocketServerService.cs" />
-    <Compile Include="Abstraction\Client\ISocketClientBeginConnect.cs" />
-    <Compile Include="Abstraction\Client\ISocketClientBeginReceive.cs" />
-    <Compile Include="Abstraction\Server\ISocketServerBeginAccept.cs" />
-    <Compile Include="Abstraction\Client\ISocketClientBeginSend.cs" />
+    <Compile Include="Interfaces\Client\ISocketClientService.cs" />
+    <Compile Include="Interfaces\Server\ISocketServerService.cs" />
+    <Compile Include="Interfaces\Client\ISocketClientBeginConnect.cs" />
+    <Compile Include="Interfaces\Client\ISocketClientBeginReceive.cs" />
+    <Compile Include="Interfaces\Server\ISocketServerBeginAccept.cs" />
+    <Compile Include="Interfaces\Client\ISocketClientBeginSend.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Implementation\SocketServerService.cs" />
+    <Compile Include="Services\SocketServerService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
