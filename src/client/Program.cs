@@ -15,9 +15,6 @@ namespace client
     {
         #region Declarations
 
-        // Client Id.
-        private static readonly Guid _clientId = Guid.NewGuid();
-
         /// <summary>
         /// Send Auto Reset Event instances for signal completion.
         /// </summary>
@@ -32,6 +29,11 @@ namespace client
         /// Receive Auto Reset Event instances for signal completion.
         /// </summary>
         private static AutoResetEvent _receiveDone = new AutoResetEvent(false);
+
+        /// <summary>
+        /// Client Id.
+        /// </summary>
+        private static readonly Guid _clientId = Guid.NewGuid();
 
         /// <summary>
         /// Received content from Server.
@@ -50,23 +52,16 @@ namespace client
         {
             Console.Title = string.Concat("client - ", _clientId);
 
-            // The DNS name of the computer.
-            IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(Constant.HOST_NAME, Constant.PORT);
+            Socket socket = GetConfiguratedAndConnectedSocket(Constant.HOST_NAME, Constant.PORT);
 
-            // Get TCP/ IP Socket.
-            Socket clientSocket = GetSocket(serverIPEndPoint);
-
-            // Connect to Server.
-            Connect(clientSocket, serverIPEndPoint);
-
-            StartClientLoop(clientSocket);
+            StartClientLoop(socket);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="clientSocket"></param>
-        private static void StartClientLoop(Socket clientSocket)
+        /// <param name="socket"></param>
+        private static void StartClientLoop(Socket socket)
         {
             while (true)
             {
@@ -80,18 +75,18 @@ namespace client
                     if (string.IsNullOrWhiteSpace(content)) continue;
 
                     // Send content to the remote device.
-                    Send(clientSocket, content);
+                    Send(socket, content);
                     _sendDone.WaitOne();
 
                     // Receive content from the remote device.
-                    Receive(clientSocket);
+                    Receive(socket);
                     _receiveDone.WaitOne();
 
                     Console.WriteLine(_response);
 
                     if (_response.Equals("SHUTDOWN"))
                     {
-                        clientSocket.Shutdown(SocketShutdown.Both);
+                        socket.Shutdown(SocketShutdown.Both);
                         break;
                     }
                 }
@@ -104,24 +99,35 @@ namespace client
             Console.ReadKey();
         }
 
+        #region Configuration
+
         /// <summary>
-        /// Get TCP/IP Socket.
+        /// Get Configurated and Connected Client TCP/IP Socket.
         /// </summary>
-        /// <param name="serverIPEndPoint"></param>
+        /// <param name="hostName"></param>
+        /// <param name="port"></param>
         /// <returns></returns>
-        private static Socket GetSocket(IPEndPoint serverIPEndPoint)
+        private static Socket GetConfiguratedAndConnectedSocket(string hostName, int port)
         {
+            Socket result = null;
+
             try
             {
+                // The DNS name of the computer.
+                IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(hostName, port);
+
                 // Create a TCP/IP socket.
-                return new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                result = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                // Connect to Server.
+                Connect(result, serverIPEndPoint);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("GetSocket.Exception: {0}", ex.ToString());
-
-                return null;
+                Console.WriteLine("GetConfiguratedAndConnectedSocket.Exception: {0}", ex.ToString());
             }
+
+            return result;
         }
 
         #region Connect
@@ -129,13 +135,13 @@ namespace client
         /// <summary>
         /// Connect to the remote endpoint.
         /// </summary>
-        /// <param name="clientSocket"></param>
+        /// <param name="socket"></param>
         /// <param name="serverIPEndPoint"></param>
-        private static void Connect(Socket clientSocket, IPEndPoint serverIPEndPoint)
+        private static void Connect(Socket socket, IPEndPoint serverIPEndPoint)
         {
             try
             {
-                clientSocket.BeginConnect(serverIPEndPoint, new AsyncCallback(ConnectCallback), clientSocket);
+                socket.BeginConnect(serverIPEndPoint, new AsyncCallback(ConnectCallback), socket);
 
                 _connectDone.WaitOne();
             }
@@ -144,8 +150,6 @@ namespace client
                 Console.WriteLine("Connect.Exception: {0}", ex.ToString());
             }
         }
-
-        #endregion
 
         /// <summary>
         /// Complete the connection.
@@ -169,6 +173,10 @@ namespace client
                 Console.WriteLine("ConnectCallback.Exception: {0}", ex.ToString());
             }
         }
+
+        #endregion
+
+        #endregion
 
         #region Receive
 

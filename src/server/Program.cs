@@ -17,10 +17,14 @@ namespace server
     {
         #region Declarations
 
-        // Accept Reset Event instances for signal completion.
+        /// <summary>
+        /// Accept Reset Event instances for signal completion.
+        /// </summary>
         private static AutoResetEvent _acceptDone = new AutoResetEvent(false);
 
-        // Client list for request time check.
+        /// <summary>
+        /// Client list for request time check.
+        /// </summary>
         private static List<ClientDto> _clientList = new List<ClientDto>();
 
         #endregion
@@ -35,16 +39,9 @@ namespace server
         {
             Console.Title = "server";
 
-            // The DNS name of the computer.
-            IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(Constant.HOST_NAME, Constant.PORT);
+            Socket socket = GetConfiguratedAndBindedSocket(Constant.HOST_NAME, Constant.PORT);
 
-            // Get TCP/ IP Socket.
-            Socket serverSocket = GetSocket(serverIPEndPoint);
-
-            // Binding.
-            Bind(serverSocket, serverIPEndPoint);
-
-            StartServerLoop(serverSocket);
+            StartServerLoop(socket);
         }
 
         /// <summary>
@@ -66,24 +63,35 @@ namespace server
             }
         }
 
+        #region Configuration
+
         /// <summary>
-        /// Get TCP/IP Socket.
+        /// Get Configurated and Binded Server TCP/IP Socket.
         /// </summary>
-        /// <param name="serverIPEndPoint"></param>
+        /// <param name="hostName"></param>
+        /// <param name="port"></param>
         /// <returns></returns>
-        private static Socket GetSocket(IPEndPoint serverIPEndPoint)
+        private static Socket GetConfiguratedAndBindedSocket(string hostName, int port)
         {
+            Socket result = null;
+
             try
             {
+                // The DNS name of the computer.
+                IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(hostName, port);
+
                 // Create a TCP/IP socket.
-                return new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                result = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                // Bind and Listen.
+                Bind(result, serverIPEndPoint);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("GetSocket.Exception: {0}", ex.ToString());
-
-                return null;
+                Console.WriteLine("GetConfiguratedAndBindedSocket.Exception: {0}", ex.ToString());
             }
+
+            return result;
         }
 
         /// <summary>
@@ -93,12 +101,21 @@ namespace server
         /// <param name="serverIPEndPoint"></param>
         private static void Bind(Socket serverSocket, IPEndPoint serverIPEndPoint)
         {
-            // Bind the socket to the local endpoint and listen for incoming connections.
-            serverSocket.Bind(serverIPEndPoint);
+            try
+            {
+                // Bind the socket to the local endpoint and listen for incoming connections.
+                serverSocket.Bind(serverIPEndPoint);
 
-            // Maximum length of the pending connections queue.
-            serverSocket.Listen(Constant.BACKLOG);
+                // Maximum length of the pending connections queue.
+                serverSocket.Listen(Constant.BACKLOG);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Bind.Exception: {0}", ex.ToString());
+            }
         }
+
+        #endregion
 
         #region Accept
 
@@ -108,11 +125,18 @@ namespace server
         /// <param name="serverSocket"></param>
         private static void Accept(Socket serverSocket)
         {
-            // Start an asynchronous socket to listen for connections.
-            serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), serverSocket);
+            try
+            {
+                // Start an asynchronous socket to listen for connections.
+                serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), serverSocket);
 
-            // Wait until a connection is made before continuing.
-            _acceptDone.WaitOne();
+                // Wait until a connection is made before continuing.
+                _acceptDone.WaitOne();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Accept.Exception: {0}", ex.ToString());
+            }
         }
 
         /// <summary>
@@ -183,8 +207,6 @@ namespace server
 
                     content = content.Replace(string.Concat(Constant.SEPARATOR, clientId), string.Empty);
 
-
-
                     if (!_clientList.Any(x => x.Id.Equals(clientId)))
                     {
                         _clientList.Add(new ClientDto(clientId, requestDateTime));
@@ -224,8 +246,6 @@ namespace server
 
                         client.LastRequestDateTime = requestDateTime;
                     }
-
-
 
                     // All the content has been read from the client. Display it on the console.
                     Console.WriteLine(content);
