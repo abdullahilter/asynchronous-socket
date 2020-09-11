@@ -6,7 +6,7 @@ namespace utility
     /// <summary>
     /// 
     /// </summary>
-    public interface IClientService : ISocketBeginConnect, ISocketBeginReceive, ISocketBeginSend
+    public interface ISocketClientService : ISocketClientBeginConnect, ISocketClientBeginReceive, ISocketClientBeginSend
     {
         /// <summary>
         /// Client Id.

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net.Sockets;
 
 using utility;
 
@@ -12,7 +11,10 @@ namespace client
     {
         #region Declarations
 
-        private static IClientService _clientService = null;
+        /// <summary>
+        /// 
+        /// </summary>
+        private static ISocketClientService _clientService = null;
 
         #endregion
 
@@ -24,7 +26,7 @@ namespace client
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            _clientService = new ClientService();
+            _clientService = new SocketClientService();
 
             Console.Title = string.Concat("client - ", _clientService.ClientId);
 
@@ -51,11 +53,11 @@ namespace client
                     if (string.IsNullOrWhiteSpace(content)) continue;
 
                     // Send content to the remote device.
-                    _clientService.Send(content);
+                    _clientService.BeginSend(content);
                     _clientService.SendDone.WaitOne();
 
                     // Receive content from the remote device.
-                    _clientService.Receive();
+                    _clientService.BeginReceive();
                     _clientService.ReceiveDone.WaitOne();
 
                     Console.WriteLine(_clientService.Response);

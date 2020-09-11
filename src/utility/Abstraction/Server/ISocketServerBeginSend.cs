@@ -1,17 +1,19 @@
 ﻿using System;
+using System.Net.Sockets;
 
 namespace utility
 {
     /// <summary>
     /// 
     /// </summary>
-    public interface ISocketBeginSend
+    public interface ISocketServerBeginSend
     {
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="clientSocket"></param>
         /// <param name="content"></param>
-        void Send(string content);
+        void BeginSend(Socket clientSocket, string content);
 
         /// <summary>
         /// 

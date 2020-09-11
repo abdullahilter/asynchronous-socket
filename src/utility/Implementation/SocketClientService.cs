@@ -9,7 +9,7 @@ namespace utility
     /// <summary>
     /// 
     /// </summary>
-    public class ClientService : IClientService
+    public class SocketClientService : ISocketClientService
     {
         #region Properties
 
@@ -44,6 +44,9 @@ namespace utility
 
         #region Declarations
 
+        /// <summary>
+        /// 
+        /// </summary>
         private Socket _socket = null;
 
         #endregion
@@ -69,7 +72,7 @@ namespace utility
                 _socket = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
                 // Connect to Server.
-                Connect(serverIPEndPoint);
+                BeginConnect(serverIPEndPoint);
             }
             catch (Exception ex)
             {
@@ -83,7 +86,7 @@ namespace utility
         /// Connect to the remote endpoint.
         /// </summary>
         /// <param name="serverIPEndPoint"></param>
-        public void Connect(IPEndPoint serverIPEndPoint)
+        public void BeginConnect(IPEndPoint serverIPEndPoint)
         {
             try
             {
@@ -129,7 +132,7 @@ namespace utility
         /// <summary>
         /// Begin receiving the data from the remote device.
         /// </summary>
-        public void Receive()
+        public void BeginReceive()
         {
             try
             {
@@ -161,7 +164,7 @@ namespace utility
                     Response = Encoding.ASCII.GetString(Constant.BUFFER, 0, receivedBytes);
 
                     // Get the rest of the content.  
-                    Receive();
+                    BeginReceive();
 
                     // Signal that the receive has been made.
                     ReceiveDone.Set();
@@ -181,7 +184,7 @@ namespace utility
         /// Begin sending the content to the remote device.
         /// </summary>
         /// <param name="content"></param>
-        public void Send(string content)
+        public void BeginSend(string content)
         {
             try
             {

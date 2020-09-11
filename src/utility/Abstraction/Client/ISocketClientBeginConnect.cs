@@ -1,23 +1,23 @@
 ﻿using System;
-using System.Net.Sockets;
+using System.Net;
 
 namespace utility
 {
     /// <summary>
     /// 
     /// </summary>
-    public interface ISocketBeginAccept
+    public interface ISocketClientBeginConnect
     {
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="socket"></param>
-        void Accept(Socket socket);
+        /// <param name="serverIPEndPoint"></param>
+        void BeginConnect(IPEndPoint serverIPEndPoint);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="asyncResult"></param>
-        void AcceptCallback(IAsyncResult asyncResult);
+        void ConnectCallback(IAsyncResult asyncResult);
     }
 }

@@ -5,17 +5,18 @@ namespace utility
     /// <summary>
     /// 
     /// </summary>
-    public interface ISocketBeginReceive
+    public interface ISocketClientBeginSend
     {
         /// <summary>
         /// 
         /// </summary>
-        void Receive();
+        /// <param name="content"></param>
+        void BeginSend(string content);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="asyncResult"></param>
-        void ReceiveCallback(IAsyncResult asyncResult);
+        void SendCallback(IAsyncResult asyncResult);
     }
 }
