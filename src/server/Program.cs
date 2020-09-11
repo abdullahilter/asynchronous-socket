@@ -30,7 +30,7 @@ namespace server
 
             _serverService = new SocketServerService();
 
-            _serverService.GetBindedSocket(Constant.HOST_NAME, Constant.PORT);
+            _serverService.BuildBindedSocket(Constant.HOST_NAME, Constant.PORT);
 
             StartServerLoop();
         }
