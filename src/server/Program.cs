@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Collections.Generic;
 
 using utility;
-using System.Security.Cryptography.X509Certificates;
 
 namespace server
 {
@@ -36,32 +35,46 @@ namespace server
         {
             Console.Title = "server";
 
-            StartServerLoop();
+            Socket serverSocket = GetConfiguratedServerSocket(Constant.HOST_NAME, Constant.PORT);
+
+            StartServerLoop(serverSocket);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        private static void StartServerLoop()
+        /// <param name="hostName"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        private static Socket GetConfiguratedServerSocket(string hostName, int port)
+        {
+            // Establish the remote endpoint for the socket.
+            IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(hostName, port);
+
+            // Create a TCP/IP socket.
+            Socket serverSocket = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            // Bind the socket to the local endpoint and listen for incoming connections.
+            serverSocket.Bind(serverIPEndPoint);
+
+            // Maximum length of the pending connections queue.
+            serverSocket.Listen(Constant.BACKLOG);
+
+            return serverSocket;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serverSocket"></param>
+        private static void StartServerLoop(Socket serverSocket)
         {
             try
             {
-                // The DNS name of the computer.
-                IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(Dns.GetHostName(), Constant.PORT);
-
-                // Create a TCP/IP socket.
-                Socket socket = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-                // Bind the socket to the local endpoint and listen for incoming connections.
-                socket.Bind(serverIPEndPoint);
-
-                // Maximum length of the pending connections queue.
-                socket.Listen(Constant.BACKLOG);
-
                 while (true)
                 {
                     // Start an asynchronous socket to listen for connections.
-                    socket.BeginAccept(new AsyncCallback(AcceptCallback), socket);
+                    serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), serverSocket);
 
                     // Wait until a connection is made before continuing.
                     _acceptDone.WaitOne();
@@ -97,6 +110,8 @@ namespace server
             }
         }
 
+        #region Receive
+
         /// <summary>
         /// 
         /// </summary>
@@ -112,49 +127,60 @@ namespace server
 
                 if (receivedBytes > 0)
                 {
-                    string content = Encoding.ASCII.GetString(Constant.BUFFER, 0, receivedBytes);
+                    DateTime requestDateTime = DateTime.Now;
 
-                    // Check for end of text/file tag.
-                    if (content.EndsWith(Constant.ETX))
+                    string content = string.Concat(Encoding.ASCII.GetString(Constant.BUFFER, 0, receivedBytes), $" - {requestDateTime:yyyy-MM-dd hh:mm:ss.fff}");
+
+                    Guid clientId = new Guid(content.Substring(content.LastIndexOf(Constant.SEPARATOR) + 1, 36));
+
+                    content = content.Replace(string.Concat(Constant.SEPARATOR, clientId), string.Empty);
+
+
+
+                    if (!_clientList.Any(x => x.Id.Equals(clientId)))
                     {
-                        DateTime now = DateTime.Now;
+                        _clientList.Add(new ClientDto(clientId, requestDateTime));
 
-                        content = content.Replace(Constant.ETX, $" - {now:yyyy-MM-dd hh:mm:ss.fff}");
-                        Guid clientId = new Guid(content.Substring(content.LastIndexOf(Constant.SEPARATOR) + 1, 36));
-                        content = content.Replace(string.Concat(Constant.SEPARATOR, clientId), string.Empty);
+                        Send(socket, "OK");
+                    }
+                    else
+                    {
+                        // Find client in Client List by Client Id.
+                        ClientDto client = _clientList.FirstOrDefault(x => x.Id.Equals(clientId));
 
-                        if (!_clientList.Any(x => x.Id.Equals(clientId)))
+                        // Find the time diff between the last 2 requests.
+                        TimeSpan timeSpan = requestDateTime - client.LastRequestDateTime;
+
+                        // Time diff less than 1 second?
+                        if (timeSpan.TotalSeconds <= 1.0)
                         {
-                            _clientList.Add(new ClientDto(clientId, now));
+                            if (!client.IsWarned)
+                            {
+                                client.IsWarned = true;
+
+                                Send(socket, "WARNING");
+                            }
+                            else
+                            {
+                                Send(socket, "SHUTDOWN");
+
+                                socket.Shutdown(SocketShutdown.Both);
+
+                                return;
+                            }
                         }
                         else
                         {
-                            ClientDto client = _clientList.FirstOrDefault(x => x.Id.Equals(clientId));
-
-                            // Time diff between last 2 request.
-                            TimeSpan timeSpan = now - client.LastRequestDateTime;
-
-                            if (timeSpan.Seconds <= 1)
-                            {
-                                if (client.IsWarned)
-                                {
-                                    socket.Shutdown(SocketShutdown.Both);
-                                    return;
-                                }
-                                else
-                                {
-                                    client.IsWarned = true;
-
-                                    // Send Warning.
-                                }
-                            }
-
-                            client.LastRequestDateTime = now;
+                            Send(socket, "OK");
                         }
 
-                        // All the content has been read from the client. Display it on the console.
-                        Console.WriteLine(content);
+                        client.LastRequestDateTime = requestDateTime;
                     }
+
+
+
+                    // All the content has been read from the client. Display it on the console.
+                    Console.WriteLine(content);
                 }
 
                 // Start a new async receive on the client to receive more data.
@@ -165,6 +191,53 @@ namespace server
                 Console.WriteLine("ReceiveCallback.Exception: {0}", ex.ToString());
             }
         }
+
+        #endregion
+
+        #region Send
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <param name="content"></param>
+        private static void Send(Socket socket, string content)
+        {
+            try
+            {
+                // Convert the string content to byte data using ASCII encoding.  
+                byte[] buffer = Encoding.ASCII.GetBytes(content);
+
+                // Begin sending the data to the remote device.  
+                socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, new AsyncCallback(SendCallback), socket);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Send.Exception: {0}", ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="asyncResult"></param>
+        private static void SendCallback(IAsyncResult asyncResult)
+        {
+            try
+            {
+                // Retrieve the socket from the state object.  
+                Socket socket = (Socket)asyncResult.AsyncState;
+
+                // Complete sending the data to the remote device.  
+                socket.EndSend(asyncResult);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("SendCallback.Exception: {0}", ex.ToString());
+            }
+        }
+
+        #endregion
 
         #endregion
     }

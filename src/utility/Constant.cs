@@ -1,4 +1,6 @@
-﻿namespace utility
+﻿using System.Net;
+
+namespace utility
 {
     /// <summary>
     /// Constant variables.
@@ -26,13 +28,13 @@
         public const string SEPARATOR = "~";
 
         /// <summary>
-        /// End of text.
-        /// </summary>
-        public static readonly string ETX = string.Concat(SEPARATOR, (char)3);
-
-        /// <summary>
         /// Temp buffer.
         /// </summary>
         public static readonly byte[] BUFFER = new byte[BUFFER_SIZE];
+
+        /// <summary>
+        /// The DNS name of the computer.
+        /// </summary>
+        public static readonly string HOST_NAME = Dns.GetHostName();
     }
 }
