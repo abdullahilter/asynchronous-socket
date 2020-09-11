@@ -41,7 +41,7 @@ namespace server
         }
 
         /// <summary>
-        /// 
+        /// Get configurated and Established Server TCP/IP Socket.
         /// </summary>
         /// <param name="hostName"></param>
         /// <param name="port"></param>
@@ -73,11 +73,7 @@ namespace server
             {
                 while (true)
                 {
-                    // Start an asynchronous socket to listen for connections.
-                    serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), serverSocket);
-
-                    // Wait until a connection is made before continuing.
-                    _acceptDone.WaitOne();
+                    Accept(serverSocket);
                 }
             }
             catch (Exception ex)
@@ -86,8 +82,23 @@ namespace server
             }
         }
 
+        #region Accept
+
         /// <summary>
-        /// 
+        /// Start an asynchronous socket to listen for connections.
+        /// </summary>
+        /// <param name="serverSocket"></param>
+        private static void Accept(Socket serverSocket)
+        {
+            // Start an asynchronous socket to listen for connections.
+            serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), serverSocket);
+
+            // Wait until a connection is made before continuing.
+            _acceptDone.WaitOne();
+        }
+
+        /// <summary>
+        /// Client connection request Accepted.
         /// </summary>
         /// <param name="asyncResult"></param>
         private static void AcceptCallback(IAsyncResult asyncResult)
@@ -102,7 +113,7 @@ namespace server
                 _acceptDone.Set();
 
                 // Start a new async receive on the client to receive more data.
-                clientSocket.BeginReceive(Constant.BUFFER, 0, Constant.BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceiveCallback), clientSocket);
+                Receive(clientSocket);
             }
             catch (Exception ex)
             {
@@ -110,10 +121,28 @@ namespace server
             }
         }
 
+        #endregion
+
         #region Receive
 
         /// <summary>
-        /// 
+        /// Start a new async receive on the client to receive more data.
+        /// </summary>
+        /// <param name="socket"></param>
+        private static void Receive(Socket socket)
+        {
+            try
+            {
+                socket.BeginReceive(Constant.BUFFER, 0, Constant.BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceiveCallback), socket);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Receive.Exception: {0}", ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Get received content.
         /// </summary>
         /// <param name="asyncResult"></param>
         private static void ReceiveCallback(IAsyncResult asyncResult)
@@ -129,6 +158,7 @@ namespace server
                 {
                     DateTime requestDateTime = DateTime.Now;
 
+                    // Get received content.
                     string content = string.Concat(Encoding.ASCII.GetString(Constant.BUFFER, 0, receivedBytes), $" - {requestDateTime:yyyy-MM-dd hh:mm:ss.fff}");
 
                     Guid clientId = new Guid(content.Substring(content.LastIndexOf(Constant.SEPARATOR) + 1, 36));
@@ -183,8 +213,8 @@ namespace server
                     Console.WriteLine(content);
                 }
 
-                // Start a new async receive on the client to receive more data.
-                socket.BeginReceive(Constant.BUFFER, 0, Constant.BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceiveCallback), socket);
+                // Start a new async receive on the client to receive more content.
+                Receive(socket);
             }
             catch (Exception ex)
             {
@@ -197,7 +227,7 @@ namespace server
         #region Send
 
         /// <summary>
-        /// 
+        /// Begin sending the content to the remote device.
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="content"></param>
@@ -205,10 +235,10 @@ namespace server
         {
             try
             {
-                // Convert the string content to byte data using ASCII encoding.  
+                // Convert the string content to byte content using ASCII encoding.
                 byte[] buffer = Encoding.ASCII.GetBytes(content);
 
-                // Begin sending the data to the remote device.  
+                // Begin sending the content to the remote device.
                 socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, new AsyncCallback(SendCallback), socket);
             }
             catch (Exception ex)
@@ -218,7 +248,7 @@ namespace server
         }
 
         /// <summary>
-        /// 
+        /// Complete sending the content to the remote device.
         /// </summary>
         /// <param name="asyncResult"></param>
         private static void SendCallback(IAsyncResult asyncResult)
@@ -228,7 +258,7 @@ namespace server
                 // Retrieve the socket from the state object.  
                 Socket socket = (Socket)asyncResult.AsyncState;
 
-                // Complete sending the data to the remote device.  
+                // Complete sending the content to the remote device.
                 socket.EndSend(asyncResult);
             }
             catch (Exception ex)

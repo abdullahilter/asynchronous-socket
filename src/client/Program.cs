@@ -50,18 +50,18 @@ namespace client
         {
             Console.Title = string.Concat("client - ", _clientId);
 
-            Socket clientSocket = GetConfiguratedClientSocket(Constant.HOST_NAME, Constant.PORT);
+            Socket clientSocket = GetConfiguratedAndConnectedClientSocket(Constant.HOST_NAME, Constant.PORT);
 
             StartClientLoop(clientSocket);
         }
 
         /// <summary>
-        /// 
+        /// Get configurated and Connected Client TCP/IP Socket.
         /// </summary>
         /// <param name="hostName"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        private static Socket GetConfiguratedClientSocket(string hostName, int port)
+        private static Socket GetConfiguratedAndConnectedClientSocket(string hostName, int port)
         {
             // The DNS name of the computer.
             IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(hostName, port);
@@ -69,12 +69,12 @@ namespace client
             // Create a TCP/IP socket.
             Socket clientSocket = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            // Connect to the remote endpoint.
-            clientSocket.BeginConnect(serverIPEndPoint, new AsyncCallback(ConnectCallback), clientSocket);
-            _connectDone.WaitOne();
+            Connect(clientSocket, serverIPEndPoint);
 
             return clientSocket;
         }
+
+        #region Connect
 
         /// <summary>
         /// 
@@ -118,8 +118,33 @@ namespace client
             Console.ReadKey();
         }
 
+        #region Connect
+
         /// <summary>
-        /// 
+        /// Connect to the remote endpoint.
+        /// </summary>
+        /// <param name="clientSocket"></param>
+        /// <param name="serverIPEndPoint"></param>
+        private static void Connect(Socket clientSocket, IPEndPoint serverIPEndPoint)
+        {
+            try
+            {
+                clientSocket.BeginConnect(serverIPEndPoint, new AsyncCallback(ConnectCallback), clientSocket);
+
+                _connectDone.WaitOne();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Connect.Exception: {0}", ex.ToString());
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        /// <summary>
+        /// Complete the connection.
         /// </summary>
         /// <param name="asyncResult"></param>
         private static void ConnectCallback(IAsyncResult asyncResult)
@@ -144,14 +169,13 @@ namespace client
         #region Receive
 
         /// <summary>
-        /// 
+        /// Begin receiving the data from the remote device.
         /// </summary>
         /// <param name="socket"></param>
         private static void Receive(Socket socket)
         {
             try
             {
-                // Begin receiving the data from the remote device.
                 socket.BeginReceive(Constant.BUFFER, 0, Constant.BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceiveCallback), socket);
             }
             catch (Exception ex)
@@ -161,7 +185,7 @@ namespace client
         }
 
         /// <summary>
-        /// 
+        /// Get received content.
         /// </summary>
         /// <param name="asyncResult"></param>
         private static void ReceiveCallback(IAsyncResult asyncResult)
@@ -176,11 +200,11 @@ namespace client
 
                 if (receivedBytes > 0)
                 {
-                    // There might be more data, so store the data received so far.  
+                    // Get received content.
                     _response = Encoding.ASCII.GetString(Constant.BUFFER, 0, receivedBytes);
 
-                    // Get the rest of the data.  
-                    socket.BeginReceive(Constant.BUFFER, 0, Constant.BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceiveCallback), socket);
+                    // Get the rest of the content.  
+                    Receive(socket);
 
                     // Signal that the receive has been made.
                     _receiveDone.Set();
@@ -197,7 +221,7 @@ namespace client
         #region Send
 
         /// <summary>
-        /// 
+        /// Begin sending the content to the remote device.
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="content"></param>
@@ -220,7 +244,7 @@ namespace client
         }
 
         /// <summary>
-        /// 
+        /// Complete sending the content to the remote device.
         /// </summary>
         /// <param name="asyncResult"></param>
         private static void SendCallback(IAsyncResult asyncResult)
