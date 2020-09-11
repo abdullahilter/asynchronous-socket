@@ -35,32 +35,16 @@ namespace server
         {
             Console.Title = "server";
 
-            Socket serverSocket = GetConfiguratedServerSocket(Constant.HOST_NAME, Constant.PORT);
+            // The DNS name of the computer.
+            IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(Constant.HOST_NAME, Constant.PORT);
+
+            // Get TCP/ IP Socket.
+            Socket serverSocket = GetSocket(serverIPEndPoint);
+
+            // Binding.
+            Bind(serverSocket, serverIPEndPoint);
 
             StartServerLoop(serverSocket);
-        }
-
-        /// <summary>
-        /// Get configurated and Established Server TCP/IP Socket.
-        /// </summary>
-        /// <param name="hostName"></param>
-        /// <param name="port"></param>
-        /// <returns></returns>
-        private static Socket GetConfiguratedServerSocket(string hostName, int port)
-        {
-            // Establish the remote endpoint for the socket.
-            IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(hostName, port);
-
-            // Create a TCP/IP socket.
-            Socket serverSocket = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            // Bind the socket to the local endpoint and listen for incoming connections.
-            serverSocket.Bind(serverIPEndPoint);
-
-            // Maximum length of the pending connections queue.
-            serverSocket.Listen(Constant.BACKLOG);
-
-            return serverSocket;
         }
 
         /// <summary>
@@ -80,6 +64,40 @@ namespace server
             {
                 Console.WriteLine("StartServerLoop.Exception: {0}", ex.ToString());
             }
+        }
+
+        /// <summary>
+        /// Get TCP/IP Socket.
+        /// </summary>
+        /// <param name="serverIPEndPoint"></param>
+        /// <returns></returns>
+        private static Socket GetSocket(IPEndPoint serverIPEndPoint)
+        {
+            try
+            {
+                // Create a TCP/IP socket.
+                return new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("GetSocket.Exception: {0}", ex.ToString());
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Bind and Listen configuration.
+        /// </summary>
+        /// <param name="serverSocket"></param>
+        /// <param name="serverIPEndPoint"></param>
+        private static void Bind(Socket serverSocket, IPEndPoint serverIPEndPoint)
+        {
+            // Bind the socket to the local endpoint and listen for incoming connections.
+            serverSocket.Bind(serverIPEndPoint);
+
+            // Maximum length of the pending connections queue.
+            serverSocket.Listen(Constant.BACKLOG);
         }
 
         #region Accept

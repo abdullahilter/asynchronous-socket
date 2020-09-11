@@ -50,31 +50,17 @@ namespace client
         {
             Console.Title = string.Concat("client - ", _clientId);
 
-            Socket clientSocket = GetConfiguratedAndConnectedClientSocket(Constant.HOST_NAME, Constant.PORT);
+            // The DNS name of the computer.
+            IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(Constant.HOST_NAME, Constant.PORT);
+
+            // Get TCP/ IP Socket.
+            Socket clientSocket = GetSocket(serverIPEndPoint);
+
+            // Connect to Server.
+            Connect(clientSocket, serverIPEndPoint);
 
             StartClientLoop(clientSocket);
         }
-
-        /// <summary>
-        /// Get configurated and Connected Client TCP/IP Socket.
-        /// </summary>
-        /// <param name="hostName"></param>
-        /// <param name="port"></param>
-        /// <returns></returns>
-        private static Socket GetConfiguratedAndConnectedClientSocket(string hostName, int port)
-        {
-            // The DNS name of the computer.
-            IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(hostName, port);
-
-            // Create a TCP/IP socket.
-            Socket clientSocket = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            Connect(clientSocket, serverIPEndPoint);
-
-            return clientSocket;
-        }
-
-        #region Connect
 
         /// <summary>
         /// 
@@ -118,6 +104,26 @@ namespace client
             Console.ReadKey();
         }
 
+        /// <summary>
+        /// Get TCP/IP Socket.
+        /// </summary>
+        /// <param name="serverIPEndPoint"></param>
+        /// <returns></returns>
+        private static Socket GetSocket(IPEndPoint serverIPEndPoint)
+        {
+            try
+            {
+                // Create a TCP/IP socket.
+                return new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("GetSocket.Exception: {0}", ex.ToString());
+
+                return null;
+            }
+        }
+
         #region Connect
 
         /// <summary>
@@ -138,8 +144,6 @@ namespace client
                 Console.WriteLine("Connect.Exception: {0}", ex.ToString());
             }
         }
-
-        #endregion
 
         #endregion
 
