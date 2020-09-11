@@ -13,7 +13,7 @@ namespace utility
         /// <param name="hostName"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        void GetBindedSocket(string hostName, int port);
+        void BuildBindedSocket(string hostName, int port);
 
         /// <summary>
         /// 

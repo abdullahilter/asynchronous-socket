@@ -42,7 +42,7 @@ namespace utility
         /// <param name="hostName"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        public void GetBindedSocket(string hostName, int port)
+        public void BuildBindedSocket(string hostName, int port)
         {
             try
             {
