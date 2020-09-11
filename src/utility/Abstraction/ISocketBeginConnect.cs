@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Net.Sockets;
 
 namespace utility
 {
@@ -12,9 +11,8 @@ namespace utility
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="socket"></param>
         /// <param name="serverIPEndPoint"></param>
-        void Connect(Socket socket, IPEndPoint serverIPEndPoint);
+        void Connect(IPEndPoint serverIPEndPoint);
 
         /// <summary>
         /// 

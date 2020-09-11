@@ -12,7 +12,7 @@ namespace client
     {
         #region Declarations
 
-        private static ClientService _clientService = null;
+        private static IClientService _clientService = null;
 
         #endregion
 
@@ -28,16 +28,16 @@ namespace client
 
             Console.Title = string.Concat("client - ", _clientService.ClientId);
 
-            Socket socket = _clientService.GetConnectedSocket(Constant.HOST_NAME, Constant.PORT);
+            _clientService.BuildConnectedSocket(Constant.HOST_NAME, Constant.PORT);
 
-            StartClientLoop(socket);
+            StartClientLoop();
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="socket"></param>
-        private static void StartClientLoop(Socket socket)
+        private static void StartClientLoop()
         {
             while (true)
             {
@@ -51,20 +51,16 @@ namespace client
                     if (string.IsNullOrWhiteSpace(content)) continue;
 
                     // Send content to the remote device.
-                    _clientService.Send(socket, content);
+                    _clientService.Send(content);
                     _clientService.SendDone.WaitOne();
 
                     // Receive content from the remote device.
-                    _clientService.Receive(socket);
+                    _clientService.Receive();
                     _clientService.ReceiveDone.WaitOne();
 
                     Console.WriteLine(_clientService.Response);
 
-                    if (_clientService.Response.Equals("SHUTDOWN"))
-                    {
-                        socket.Shutdown(SocketShutdown.Both);
-                        break;
-                    }
+                    if (_clientService.Response.Equals("SHUTDOWN")) break;
                 }
                 catch (Exception ex)
                 {

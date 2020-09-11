@@ -13,39 +13,38 @@ namespace utility
     {
         #region Properties
 
-        /// <summary>
-        /// Client Id.
-        /// </summary>
-        public Guid ClientId { get; private set; }
+        public Guid ClientId { get; private set; } = Guid.NewGuid();
 
-        /// <summary>
-        /// Received content from Server.
-        /// </summary>
-        public string Response { get; private set; }
+        private string _response = string.Empty;
+        public string Response
+        {
+            get
+            {
+                if (_response.Equals("SHUTDOWN"))
+                {
+                    _socket.Shutdown(SocketShutdown.Both);
+                }
 
-        /// <summary>
-        /// Send Auto Reset Event instances for signal completion.
-        /// </summary>
+                return _response;
+            }
+
+            private set
+            {
+                _response = value;
+            }
+        }
+
         public AutoResetEvent SendDone { get; set; } = new AutoResetEvent(false);
 
-        /// <summary>
-        /// Connect Auto Reset Event instances for signal completion.
-        /// </summary>
         public AutoResetEvent ConnectDone { get; set; } = new AutoResetEvent(false);
 
-        /// <summary>
-        /// Receive Auto Reset Event instances for signal completion.
-        /// </summary>
         public AutoResetEvent ReceiveDone { get; set; } = new AutoResetEvent(false);
 
         #endregion
 
-        #region Constructors
+        #region Declarations
 
-        public ClientService()
-        {
-            ClientId = Guid.NewGuid();
-        }
+        private Socket _socket = null;
 
         #endregion
 
@@ -59,27 +58,23 @@ namespace utility
         /// <param name="hostName"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        public Socket GetConnectedSocket(string hostName, int port)
+        public void BuildConnectedSocket(string hostName, int port)
         {
-            Socket result = null;
-
             try
             {
                 // The DNS name of the computer.
                 IPEndPoint serverIPEndPoint = Helper.GetIPEndPoint(hostName, port);
 
                 // Create a TCP/IP socket.
-                result = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                _socket = new Socket(serverIPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
                 // Connect to Server.
-                Connect(result, serverIPEndPoint);
+                Connect(serverIPEndPoint);
             }
             catch (Exception ex)
             {
                 Console.WriteLine("GetConnectedSocket.Exception: {0}", ex.ToString());
             }
-
-            return result;
         }
 
         #region Connect
@@ -87,13 +82,12 @@ namespace utility
         /// <summary>
         /// Connect to the remote endpoint.
         /// </summary>
-        /// <param name="socket"></param>
         /// <param name="serverIPEndPoint"></param>
-        public void Connect(Socket socket, IPEndPoint serverIPEndPoint)
+        public void Connect(IPEndPoint serverIPEndPoint)
         {
             try
             {
-                socket.BeginConnect(serverIPEndPoint, new AsyncCallback(ConnectCallback), socket);
+                _socket.BeginConnect(serverIPEndPoint, new AsyncCallback(ConnectCallback), _socket);
 
                 ConnectDone.WaitOne();
             }
@@ -135,12 +129,11 @@ namespace utility
         /// <summary>
         /// Begin receiving the data from the remote device.
         /// </summary>
-        /// <param name="socket"></param>
-        public void Receive(Socket socket)
+        public void Receive()
         {
             try
             {
-                socket.BeginReceive(Constant.BUFFER, 0, Constant.BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceiveCallback), socket);
+                _socket.BeginReceive(Constant.BUFFER, 0, Constant.BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceiveCallback), _socket);
             }
             catch (Exception ex)
             {
@@ -168,7 +161,7 @@ namespace utility
                     Response = Encoding.ASCII.GetString(Constant.BUFFER, 0, receivedBytes);
 
                     // Get the rest of the content.  
-                    Receive(socket);
+                    Receive();
 
                     // Signal that the receive has been made.
                     ReceiveDone.Set();
@@ -187,9 +180,8 @@ namespace utility
         /// <summary>
         /// Begin sending the content to the remote device.
         /// </summary>
-        /// <param name="socket"></param>
         /// <param name="content"></param>
-        public void Send(Socket socket, string content)
+        public void Send(string content)
         {
             try
             {
@@ -199,7 +191,7 @@ namespace utility
                 byte[] buffer = Encoding.ASCII.GetBytes(content);
 
                 // Begin sending the content to the remote device.
-                socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, new AsyncCallback(SendCallback), socket);
+                _socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, new AsyncCallback(SendCallback), _socket);
             }
             catch (Exception ex)
             {

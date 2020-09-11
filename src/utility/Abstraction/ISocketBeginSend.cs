@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net.Sockets;
 
 namespace utility
 {
@@ -11,9 +10,8 @@ namespace utility
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="socket"></param>
         /// <param name="content"></param>
-        void Send(Socket socket, string content);
+        void Send(string content);
 
         /// <summary>
         /// 

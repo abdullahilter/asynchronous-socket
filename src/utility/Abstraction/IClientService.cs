@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Threading;
 
 namespace utility
 {
@@ -8,11 +9,36 @@ namespace utility
     public interface IClientService : ISocketBeginConnect, ISocketBeginReceive, ISocketBeginSend
     {
         /// <summary>
+        /// Client Id.
+        /// </summary>
+        Guid ClientId { get; }
+
+        /// <summary>
+        /// Received content from Server.
+        /// </summary>
+        string Response { get; }
+
+        /// <summary>
+        /// Send Auto Reset Event instances for signal completion.
+        /// </summary>
+        AutoResetEvent SendDone { get; set; }
+
+        /// <summary>
+        /// Connect Auto Reset Event instances for signal completion.
+        /// </summary>
+        AutoResetEvent ConnectDone { get; set; }
+
+        /// <summary>
+        /// Receive Auto Reset Event instances for signal completion.
+        /// </summary>
+        AutoResetEvent ReceiveDone { get; set; }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="hostName"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        Socket GetConnectedSocket(string hostName, int port);
+        void BuildConnectedSocket(string hostName, int port);
     }
 }
