@@ -39,7 +39,7 @@ namespace server
         {
             Console.Title = "server";
 
-            Socket socket = GetConfiguratedAndBindedSocket(Constant.HOST_NAME, Constant.PORT);
+            Socket socket = GetBindedSocket(Constant.HOST_NAME, Constant.PORT);
 
             StartServerLoop(socket);
         }
@@ -66,12 +66,12 @@ namespace server
         #region Configuration
 
         /// <summary>
-        /// Get Configurated and Binded Server TCP/IP Socket.
+        /// Get Binded Server TCP/IP Socket.
         /// </summary>
         /// <param name="hostName"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        private static Socket GetConfiguratedAndBindedSocket(string hostName, int port)
+        private static Socket GetBindedSocket(string hostName, int port)
         {
             Socket result = null;
 
@@ -88,7 +88,7 @@ namespace server
             }
             catch (Exception ex)
             {
-                Console.WriteLine("GetConfiguratedAndBindedSocket.Exception: {0}", ex.ToString());
+                Console.WriteLine("GetBindedSocket.Exception: {0}", ex.ToString());
             }
 
             return result;

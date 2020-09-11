@@ -52,7 +52,7 @@ namespace client
         {
             Console.Title = string.Concat("client - ", _clientId);
 
-            Socket socket = GetConfiguratedAndConnectedSocket(Constant.HOST_NAME, Constant.PORT);
+            Socket socket = GetConnectedSocket(Constant.HOST_NAME, Constant.PORT);
 
             StartClientLoop(socket);
         }
@@ -102,12 +102,12 @@ namespace client
         #region Configuration
 
         /// <summary>
-        /// Get Configurated and Connected Client TCP/IP Socket.
+        /// Get Connected Client TCP/IP Socket.
         /// </summary>
         /// <param name="hostName"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        private static Socket GetConfiguratedAndConnectedSocket(string hostName, int port)
+        private static Socket GetConnectedSocket(string hostName, int port)
         {
             Socket result = null;
 
@@ -124,7 +124,7 @@ namespace client
             }
             catch (Exception ex)
             {
-                Console.WriteLine("GetConfiguratedAndConnectedSocket.Exception: {0}", ex.ToString());
+                Console.WriteLine("GetConnectedSocket.Exception: {0}", ex.ToString());
             }
 
             return result;
