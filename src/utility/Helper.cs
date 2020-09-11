@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Linq;
 
 namespace utility
@@ -17,18 +16,11 @@ namespace utility
         /// <returns></returns>
         public static IPEndPoint GetIPEndPoint(string hostName, int port)
         {
-            try
-            {
-                IPHostEntry ipHostEntry = Dns.GetHostEntry(hostName);
+            IPHostEntry ipHostEntry = Dns.GetHostEntry(hostName);
 
-                IPAddress ipAddress = ipHostEntry.AddressList.FirstOrDefault();
+            IPAddress ipAddress = ipHostEntry.AddressList.FirstOrDefault();
 
-                return new IPEndPoint(ipAddress, port);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            return new IPEndPoint(ipAddress, port);
         }
     }
 }
