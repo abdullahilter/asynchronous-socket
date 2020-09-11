@@ -47,14 +47,14 @@ namespace server
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="serverSocket"></param>
-        private static void StartServerLoop(Socket serverSocket)
+        /// <param name="socket"></param>
+        private static void StartServerLoop(Socket socket)
         {
             try
             {
                 while (true)
                 {
-                    Accept(serverSocket);
+                    Accept(socket);
                 }
             }
             catch (Exception ex)
@@ -97,17 +97,17 @@ namespace server
         /// <summary>
         /// Bind and Listen configuration.
         /// </summary>
-        /// <param name="serverSocket"></param>
+        /// <param name="socket"></param>
         /// <param name="serverIPEndPoint"></param>
-        private static void Bind(Socket serverSocket, IPEndPoint serverIPEndPoint)
+        private static void Bind(Socket socket, IPEndPoint serverIPEndPoint)
         {
             try
             {
                 // Bind the socket to the local endpoint and listen for incoming connections.
-                serverSocket.Bind(serverIPEndPoint);
+                socket.Bind(serverIPEndPoint);
 
                 // Maximum length of the pending connections queue.
-                serverSocket.Listen(Constant.BACKLOG);
+                socket.Listen(Constant.BACKLOG);
             }
             catch (Exception ex)
             {
@@ -122,13 +122,13 @@ namespace server
         /// <summary>
         /// Start an asynchronous socket to listen for connections.
         /// </summary>
-        /// <param name="serverSocket"></param>
-        private static void Accept(Socket serverSocket)
+        /// <param name="socket"></param>
+        private static void Accept(Socket socket)
         {
             try
             {
                 // Start an asynchronous socket to listen for connections.
-                serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), serverSocket);
+                socket.BeginAccept(new AsyncCallback(AcceptCallback), socket);
 
                 // Wait until a connection is made before continuing.
                 _acceptDone.WaitOne();

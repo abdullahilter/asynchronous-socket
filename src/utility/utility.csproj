@@ -42,9 +42,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Implementation\ClientService.cs" />
     <Compile Include="Constant.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="Abstraction\IClientService.cs" />
+    <Compile Include="Abstraction\IServerService.cs" />
+    <Compile Include="Abstraction\ISocketBeginConnect.cs" />
+    <Compile Include="Abstraction\ISocketBeginReceive.cs" />
+    <Compile Include="Abstraction\ISocketBeginAccept.cs" />
+    <Compile Include="Abstraction\ISocketBeginSend.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
