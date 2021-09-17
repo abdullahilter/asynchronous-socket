@@ -2,7 +2,7 @@
 
 [![BCH compliance](https://bettercodehub.com/edge/badge/abdullahilter/asynchronous-socket-example?branch=master)](https://bettercodehub.com/)
 
-[![Coverage Status](https://coveralls.io/repos/github/abdullahilter/asynchronous-socket-example/badge.svg?branch=master)](https://coveralls.io/github/abdullahilter/asynchronous-socket-example?branch=master)
+[![codecov](https://codecov.io/gh/abdullahilter/asynchronous-socket-example/branch/master/graph/badge.svg?token=1KAVQGAECV)](https://codecov.io/gh/abdullahilter/asynchronous-socket-example)
 
 ## Requirements
 - [Microsoft Visual Studio](https://visualstudio.microsoft.com/tr/downloads/)
